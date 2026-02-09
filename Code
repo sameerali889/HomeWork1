@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Generate synthetic data: y = 3 + 4x + Gaussian noise
+n = 200
+x = np.linspace(0, 5, n)
+noise = np.random.normal(0, 1, n)  # Gaussian noise with mean 0, std 1
+y = 3 + 4 * x + noise
+
+# Add bias term (column of 1s) to X for intercept
+X = np.vstack([np.ones(n), x]).T  # Shape: (n, 2)
+
+# 1. Closed-form solution (Normal Equation)
+# theta = (X^T X)^(-1) X^T y
+theta_closed = np.linalg.inv(X.T @ X) @ X.T @ y
+intercept_closed, slope_closed = theta_closed
+print(f"Closed-form solution: intercept = {intercept_closed:.4f}, slope = {slope_closed:.4f}")
+
+# 2. Gradient Descent implementation
+theta_gd = np.array([0.0, 0.0])  # Initialize theta = [0, 0]
+eta = 0.05  # Learning rate
+n_iterations = 1000
+n_samples = len(x)
+loss_history = []
+
+for iteration in range(n_iterations):
+    # Predictions
+    y_pred = X @ theta_gd
+    # Residuals
+    residuals = y - y_pred
+    # Gradient: -1/n * X^T * residuals
+    gradient = -(1/n_samples) * X.T @ residuals
+    # Update theta
+    theta_gd = theta_gd - eta * gradient
+    # Compute MSE loss: 1/(2n) * sum(residuals^2)
+    loss = (1/(2*n_samples)) * np.sum(residuals**2)
+    loss_history.append(loss)
+
+intercept_gd, slope_gd = theta_gd
+print(f"Gradient Descent solution: intercept = {intercept_gd:.4f}, slope = {slope_gd:.4f}")
+
+# 3. Plot raw data and fitted lines
+plt.figure(figsize=(10, 6))
+plt.scatter(x, y, color='blue', label='Data points', alpha=0.5)
+plt.plot(x, intercept_closed + slope_closed * x, color='red', label='Closed-form fit', linewidth=2)
+plt.plot(x, intercept_gd + slope_gd * x, color='green', linestyle='--', label='Gradient Descent fit', linewidth=2)
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Linear Regression: Closed-form vs Gradient Descent')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# 4. Plot loss curve for Gradient Descent
+plt.figure(figsize=(10, 6))
+plt.plot(range(n_iterations), loss_history, color='purple')
+plt.xlabel('Iteration')
+plt.ylabel('MSE Loss')
+plt.title('Gradient Descent Loss vs Iteration')
+plt.grid(True)
+plt.show()
+
+# 5. Comparison and explanation
+print("\nComparison:")
+print(f"Closed-form intercept: {intercept_closed:.4f}, slope: {slope_closed:.4f}")
+print(f"Gradient Descent intercept: {intercept_gd:.4f}, slope: {slope_gd:.4f}")
+print("\nExplanation: The Gradient Descent solution closely approximates the closed-form solution, "
+      "indicating convergence to a near-optimal solution. Small differences are due to the finite number of iterations "
+      "and the choice of learning rate. With more iterations or a tuned learning rate, Gradient Descent would converge even clo
